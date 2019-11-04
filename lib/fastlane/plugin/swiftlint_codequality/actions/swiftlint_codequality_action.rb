@@ -7,13 +7,13 @@ module Fastlane
       def self.run(params)
         UI.message("Parsing SwiftLint report at #{params[:path]}")
 
-        pwd = `pwd`.strip
+        pwd = Fastlane::Actions.sh("pwd", log: false).strip
 
         report = File.open(params[:path])
         result = report
                  .each
                  .select { |l| l.include?("Warning Threshold Violation") == false }
-                 .map { |line| line_to_code_climate_object(line, params[:prefix], pwd) }
+                 .map { |line| self.line_to_code_climate_object(line, params[:prefix], pwd) }
                  .to_a
                  .to_json
 
@@ -22,7 +22,7 @@ module Fastlane
         UI.success("🚀 Generated Code Quality report at #{params[:output]} 🚀")
       end
 
-      def line_to_code_climate_object(line, prefix, pwd)
+      def self.line_to_code_climate_object(line, prefix, pwd)
         filename, start, reason = line.match(/(.*\.swift):(\d+):\d+:\s*(.*)/).captures
 
         # example: error: Type Name Violation: Type name should only contain alphanumeric characters: 'FILE' (type_name)

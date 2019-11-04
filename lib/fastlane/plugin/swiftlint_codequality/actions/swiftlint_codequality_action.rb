@@ -19,11 +19,10 @@ module Fastlane
 
         IO.write(params[:output], result)
 
-        UI.success "🚀 Generated Code Quality report at #{params[:output]} 🚀"
+        UI.success("🚀 Generated Code Quality report at #{params[:output]} 🚀")
       end
 
       def line_to_code_climate_object(line, prefix, pwd)
-
         filename, start, reason = line.match(/(.*\.swift):(\d+):\d+:\s*(.*)/).captures
 
         # example: error: Type Name Violation: Type name should only contain alphanumeric characters: 'FILE' (type_name)
@@ -40,16 +39,16 @@ module Fastlane
         end
 
         {
-          :type => "issue",
-          :check_name => failure_type.strip,
-          :description => description.strip,
-          :fingerprint => Digest::MD5.hexdigest(line),
-          :severity => severity,
-          :location => {
-            :path => prefix + filename.sub(pwd, ''),
-            :lines => {
-              :begin => start.to_i,
-              :end => start.to_i
+          type: "issue",
+          check_name: failure_type.strip,
+          description: description.strip,
+          fingerprint: Digest::MD5.hexdigest(line),
+          severity: severity,
+          location: {
+            path: prefix + filename.sub(pwd, ''),
+            lines: {
+              begin: start.to_i,
+              end: start.to_i
             }
           }
         }

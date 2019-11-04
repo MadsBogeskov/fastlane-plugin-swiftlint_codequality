@@ -9,48 +9,50 @@ module Fastlane
 
         pwd = `pwd`.strip
 
-        result = File.open(params[:path])
-            .each
-            .select { |l| l.include?("Warning Threshold Violation") == false }
-            .map { |line|
-              filename, start, reason = line.match(/(.*\.swift):(\d+):\d+:\s*(.*)/).captures
-  
-              # example: error: Type Name Violation: Type name should only contain alphanumeric characters: 'FILE' (type_name)
-
-              issue_type, failure_type, description, rule = reason.match(/(.*?):?\s(.*?):\s(.*)\((.*)\)/).captures
-
-              case issue_type
-              when 'error'
-                severity = 'critical'
-              when 'warning'
-                severity = 'minor'
-              else
-                severity = 'info'
-              end
-
-               {
-                :type => "issue",
-                :check_name => failure_type.strip,
-                :description => description.strip, 
-                :fingerprint => Digest::MD5.hexdigest(line),
-                :severity => severity,
-                :location => {
-                  :path => params[:prefix] + filename.sub(pwd, ''),
-                  :lines => {
-                    :begin => start.to_i,
-                    :end => start.to_i
-                  }
-                }
-              }
-            }
-            .to_a
-            .to_json
-
-
+        report = File.open(params[:path])
+        result = report
+                 .each
+                 .select { |l| l.include?("Warning Threshold Violation") == false }
+                 .map { |line| line_to_code_climate_object(line, params[:prefix], pwd) }
+                 .to_a
+                 .to_json
 
         IO.write(params[:output], result)
 
         UI.success "🚀 Generated Code Quality report at #{params[:output]} 🚀"
+      end
+
+      def line_to_code_climate_object(line, prefix, pwd)
+
+        filename, start, reason = line.match(/(.*\.swift):(\d+):\d+:\s*(.*)/).captures
+
+        # example: error: Type Name Violation: Type name should only contain alphanumeric characters: 'FILE' (type_name)
+
+        issue_type, failure_type, description, _rule = reason.match(/(.*?):?\s(.*?):\s(.*)\((.*)\)/).captures
+
+        case issue_type
+        when 'error'
+          severity = 'critical'
+        when 'warning'
+          severity = 'minor'
+        else
+          severity = 'info'
+        end
+
+        {
+          :type => "issue",
+          :check_name => failure_type.strip,
+          :description => description.strip,
+          :fingerprint => Digest::MD5.hexdigest(line),
+          :severity => severity,
+          :location => {
+            :path => prefix + filename.sub(pwd, ''),
+            :lines => {
+              :begin => start.to_i,
+              :end => start.to_i
+            }
+          }
+        }
       end
 
       def self.description
@@ -59,10 +61,6 @@ module Fastlane
 
       def self.authors
         ["madsbogeskov"]
-      end
-
-      def self.return_value
-        
       end
 
       def self.details

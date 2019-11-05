@@ -31,11 +31,11 @@ module Fastlane
 
         case issue_type
         when 'error'
-          severity = 'critical'
+          severity = Severity::CRITICAL
         when 'warning'
-          severity = 'minor'
+          severity = Severity::MINOR
         else
-          severity = 'info'
+          severity = Severity::INFO
         end
 
         {
@@ -89,6 +89,12 @@ module Fastlane
 
       def self.is_supported?(platform)
         true
+      end
+
+      class Severity
+        CRITICAL = "critical".freeze
+        MINOR = "minor".freeze
+        INFO = "info".freeze
       end
     end
   end

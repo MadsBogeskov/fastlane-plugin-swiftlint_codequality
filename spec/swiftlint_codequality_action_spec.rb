@@ -49,5 +49,27 @@ describe Fastlane::Actions::SwiftlintCodequalityAction do
       result = JSON.parse(File.read(output)).length
       expect(result).to eq(input)
     end
+
+    it 'categories swiftlint issues into different severities' do
+      path = fixtures_path + "/multiple.txt"
+      output = fixtures_path + "/multiple.result.json"
+
+      expect(Fastlane::UI).to receive(:message).with("Parsing SwiftLint report at #{path}")
+      expect(Fastlane::UI).to receive(:success).with("🚀 Generated Code Quality report at #{output} 🚀")
+
+      command = "pwd"
+      command_result = "/Users/apple/projects"
+      allow(Fastlane::Actions).to receive(:sh).with(command, log: false).and_return(command_result)
+
+      Fastlane::Actions::SwiftlintCodequalityAction.run(path: path, output: output, prefix: '')
+
+      result = JSON.parse(File.read(output))
+      critical_count = result.select { |issue| issue["severity"] == Fastlane::Actions::SwiftlintCodequalityAction::Severity::CRITICAL }.length
+      minor_count = result.select { |issue| issue["severity"] == Fastlane::Actions::SwiftlintCodequalityAction::Severity::MINOR }.length
+      info_count = result.select { |issue| issue["severity"] == Fastlane::Actions::SwiftlintCodequalityAction::Severity::INFO }.length
+      expect(critical_count).to eq(4)
+      expect(minor_count).to eq(2)
+      expect(info_count).to eq(2)
+    end
   end
 end

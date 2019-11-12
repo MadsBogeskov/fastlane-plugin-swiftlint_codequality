@@ -1,6 +1,6 @@
 describe Fastlane::Actions::SwiftlintCodequalityAction do
   let(:fixtures_path) { File.expand_path("./spec/fixtures") }
-  let(:fail_build_conditions) { { 'critical': 1000, 'minor': 1000, 'info': 1000 } }
+  let(:fail_build_conditions) { { critical: 1000, minor: 1000, info: 1000 } }
 
   describe '#run' do
     it 'generates empty output if input is also empty' do
